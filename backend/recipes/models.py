@@ -27,6 +27,28 @@ class Tag(models.Model):
         return self.name
 
 
+class Ingredients(models.Model):
+    name = models.CharField(
+        'название ингредиента',
+        max_length=100,
+        unique=True
+    )
+    measurement_unit = models.CharField(
+        'единица измерения',
+        max_length=100,
+        unique=True
+    )
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+
+    def __str__(self):
+        return self.name
+
+
+
 # class Recipes(models.Model):
 #     pass
 #
