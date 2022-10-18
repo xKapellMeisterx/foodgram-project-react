@@ -49,7 +49,8 @@ class User(AbstractUser):
         'Пользовательская роль',
         max_length=15,
         choices=USER_ROLE,
-        default=USER
+        default=USER,
+        help_text='Выберите роль пользователя'
     )
 
     @property
