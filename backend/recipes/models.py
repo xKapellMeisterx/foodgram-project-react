@@ -56,9 +56,9 @@ class Ingredients(models.Model):
         return self.name
 
 
-class Recipes(models.Model):
+class Recipe(models.Model):
     author = models.ForeignKey(
-        User,
+        'users.User',
         on_delete=models.CASCADE,
         verbose_name='Автор',
         help_text='Выберите автора рецепта',
@@ -89,9 +89,9 @@ class Recipes(models.Model):
         help_text='Выберите ингредиенты'
     )
     cooking_time = models.IntegerField(
-        validators=(MinValueValidator(1),),
-        verbose_name='Время приготовления',
-        help_text='Введите время приготовления'
+        'время приготовления',
+        help_text='Введите время приготовления',
+        validators=(MinValueValidator(1),)
     )
 
     class Meta:
@@ -102,19 +102,35 @@ class Recipes(models.Model):
     def __str__(self):
         return self.name
 
-#
-#
+
 # class ShoppingCart(models.Model):
 #     pass
 #
 #
-# class Favorites(models.Model):
-#     pass
-#
-#
-# class Follow(models.Model):
-#     pass
-#
-#
-# class Ingredients(models.Model):
-#     pass
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Пользователь',
+        help_text='Выберите пользователя'
+    )
+    recipe = models.ForeignKey(
+        'Recipe',
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+        help_text='Выберите рецепт'
+    )
+
+    class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Списки Избранное'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe',),
+                name='unique_user_favorite_recipe',
+            ),
+        )
+
+    def __str__(self):
+        return f'{self.user} -> {self.recipe}'
