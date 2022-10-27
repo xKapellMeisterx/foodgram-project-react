@@ -1,7 +1,17 @@
-from rest_framework import viewsets
-
-from recipes.models import Ingredients, Tag
-from .serializers import IngredientSerializer, TagSerializer
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, status
+from rest_framework import permissions
+from recipes.models import Ingredient, Tag, ShoppingCart, Recipe, \
+    IngredientMount
+from .serializers import (
+    IngredientSerializer,
+    TagSerializer,
+    ShoppingCartSerializer
+)
+from rest_framework.response import Response
+from http import HTTPStatus
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -10,5 +20,52 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredients.objects.all()
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+
+
+class CartViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ShoppingCartSerializer
+    queryset = ShoppingCart.objects.all()
+    model = ShoppingCart
+
+    def create(self, request, *args, **kwargs):
+        recipe_id = int(self.kwargs['recipes_id'])
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        self.model.objects.create(
+            user=request.user, recipe=recipe)
+        serializer = ShoppingCartSerializer()
+        return Response(
+            serializer.to_representation(instance=recipe),
+            status=status.HTTP_201_CREATED
+        )
+
+    def delete(self, request, pk):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+        shopping_cart = get_object_or_404(
+            self.model,
+            user=user,
+            recipe=recipe
+        )
+        shopping_cart.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def download(self, request):
+        shopping_list = IngredientMount.objects.filter(
+            recipe__shopping_cart__user=request.user).values(
+            'ingredient__name', 'ingredient__measurement_unit').order_by(
+                'ingredient__name').annotate(ingredient_total=Sum('amount'))
+
+        content = (
+            [f'{item["ingredient__name"]} ({item["ingredient__measurement_unit"]})'
+            f'- {item["ingredient_total"]}\n'
+            for item in shopping_list]
+                   )
+        filename = 'shopping_cart.txt'
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            f'attachment; filename={filename}'
+        )
+        return response

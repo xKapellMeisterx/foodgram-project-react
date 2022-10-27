@@ -42,15 +42,15 @@ class CustomUserSerializer(UserSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username',
-        default=serializers.CurrentUserDefault()
-    )
-    following = serializers.SlugRelatedField(
-        queryset=User.objects.all(),
-        slug_field='username'
-    )
+    # user = serializers.SlugRelatedField(
+    #     read_only=True,
+    #     slug_field='username',
+    #     default=serializers.CurrentUserDefault()
+    # )
+    # following = serializers.SlugRelatedField(
+    #     queryset=User.objects.all(),
+    #     slug_field='username'
+    # )
 
     def validate_following(self, following):
         if self.context.get('request').user == following:

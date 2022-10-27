@@ -33,7 +33,7 @@ class Tag(models.Model):
         return self.name
 
 
-class Ingredients(models.Model):
+class Ingredient(models.Model):
     name = models.CharField(
         'название ингредиента',
         max_length=100,
@@ -84,7 +84,7 @@ class Recipe(models.Model):
         help_text='Выберите тэги'
     )
     ingredients = models.ManyToManyField(
-        'Ingredients',
+        'Ingredient',
         verbose_name='Ингредиенты',
         help_text='Выберите ингредиенты'
     )
@@ -103,10 +103,63 @@ class Recipe(models.Model):
         return self.name
 
 
-# class ShoppingCart(models.Model):
-#     pass
-#
-#
+class ShoppingCart(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shopping_cart',
+        verbose_name='Пользователь',
+        help_text='Выберите пользователя'
+
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='shopping_cart',
+        verbose_name='Рецепт',
+        help_text='Выберите рецепты'
+    )
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe',),
+                name='unique_user_cart_recipe',
+            ),
+        )
+
+
+class IngredientMount(models.Model):
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='recipe_ingredients',
+        verbose_name='Продукты рецепта',
+        help_text='Добавьте ингредиеты для рецепта'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE,
+        related_name='recipe_ingredients',
+        verbose_name='Рецепт',
+        help_text='Выберите рецепт'
+    )
+    amount = models.PositiveIntegerField(
+        verbose_name='Количество ингредиента',
+        help_text='Введите количество продукта',
+        validators=[MinValueValidator(1), ],
+    )
+
+    class Meta:
+        verbose_name = 'Продукты в рецепте'
+        verbose_name_plural = 'Продукты в рецепте'
+
+    def __str__(self):
+        return f'{self.ingredient} {self.recipe} {self.amount}'
+
+
 class Favorite(models.Model):
     user = models.ForeignKey(
         'users.User',
