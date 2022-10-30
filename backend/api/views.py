@@ -8,7 +8,7 @@ from recipes.models import Ingredient, Tag, ShoppingCart, Recipe, \
 from .serializers import (
     IngredientSerializer,
     TagSerializer,
-    ShoppingCartSerializer
+    ShoppingCartSerializer, RecipeSerializer
 )
 from rest_framework.response import Response
 from http import HTTPStatus
@@ -22,6 +22,11 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
 
 
 class CartViewSet(viewsets.ModelViewSet):
@@ -41,9 +46,10 @@ class CartViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    def delete(self, request, pk):
+    def delete(self, request, *args, **kwargs):
         user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
+        recipe_id = int(self.kwargs['recipes_id'])
+        recipe = get_object_or_404(Recipe, id=recipe_id)
         shopping_cart = get_object_or_404(
             self.model,
             user=user,

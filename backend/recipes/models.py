@@ -58,7 +58,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     author = models.ForeignKey(
-        'users.User',
+        User,
         on_delete=models.CASCADE,
         verbose_name='Автор',
         help_text='Выберите автора рецепта',
