@@ -8,10 +8,9 @@ from recipes.models import Ingredient, Tag, ShoppingCart, Recipe, \
 from .serializers import (
     IngredientSerializer,
     TagSerializer,
-    ShoppingCartSerializer, RecipeSerializer
+    ShoppingCartSerializer, RecipeGetSerializer, RecipePostSerializer
 )
 from rest_framework.response import Response
-from http import HTTPStatus
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -26,7 +25,21 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    serializer_class = RecipeGetSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return RecipeGetSerializer
+        return RecipePostSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        serializer = RecipeGetSerializer(instance=serializer.instance)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED
+        )
 
 
 class CartViewSet(viewsets.ModelViewSet):
