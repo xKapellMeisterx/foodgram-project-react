@@ -43,7 +43,6 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(
         'единица измерения',
         max_length=100,
-        unique=True,
         help_text='Введите единицу измерения'
     )
 
