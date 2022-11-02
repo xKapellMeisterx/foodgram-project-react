@@ -38,7 +38,12 @@ class IngredientAmountGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientMount
-        fields = ('id', "name", "measurement_unit", "amount")
+        fields = (
+            'id',
+            "name",
+            "measurement_unit",
+            "amount"
+        )
 
     def get_id(self, obj):
         return obj.ingredient.id
@@ -214,7 +219,12 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCart
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
         validators = (
             UniqueTogetherValidator(
                 queryset=ShoppingCart.objects.all(),
@@ -223,15 +233,20 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         )
 
 
-class FaworiteSerializer(serializers.ModelSerializer):
+class FavoriteSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
-    cooling_time = serializers.IntegerField()
+    cooking_time = serializers.IntegerField()
     image = Base64ImageField(max_length=None, use_url=False,)
 
     class Meta:
         model = Favorite
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
         validators = (
             UniqueTogetherValidator(
                 queryset=Favorite.objects.all(),

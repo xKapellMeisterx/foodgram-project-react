@@ -1,6 +1,5 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-
 from users.models import User
 
 
@@ -59,6 +58,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='recipes',
         verbose_name='Автор',
         help_text='Выберите автора рецепта',
         null=True
@@ -152,6 +152,7 @@ class IngredientMount(models.Model):
     )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Продукты в рецепте'
         verbose_name_plural = 'Продукты в рецепте'
 
@@ -161,22 +162,23 @@ class IngredientMount(models.Model):
 
 class Favorite(models.Model):
     user = models.ForeignKey(
-        'users.User',
+        User,
         on_delete=models.CASCADE,
-        related_name='favorites',
         verbose_name='Пользователь',
         help_text='Выберите пользователя'
     )
     recipe = models.ForeignKey(
-        'Recipe',
+        Recipe,
         on_delete=models.CASCADE,
+        related_name='favorites',
         verbose_name='Рецепт',
         help_text='Выберите рецепт'
     )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Избранное'
-        verbose_name_plural = 'Списки Избранное'
+        verbose_name_plural = 'Списки избранного'
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe',),
@@ -185,4 +187,4 @@ class Favorite(models.Model):
         )
 
     def __str__(self):
-        return f'{self.user} -> {self.recipe}'
+        return f'{self.user} take {self.recipe}'

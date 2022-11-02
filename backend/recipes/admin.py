@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Ingredient, Recipe, Tag, ShoppingCart
+from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag, \
+    IngredientMount
 
 
 @admin.register(Tag)
@@ -13,7 +14,7 @@ class TagsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Ingredient)
-class Ingredients(admin.ModelAdmin):
+class IngredientsAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'measurement_unit'
@@ -37,4 +38,21 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = (
         'user',
         'recipe',
+    )
+
+
+@admin.register(Favorite)
+class FavoriteCartAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'recipe',
+    )
+
+
+@admin.register(IngredientMount)
+class IngredientMountAdmin(admin.ModelAdmin):
+    list_display = (
+        'ingredient',
+        'recipe',
+        'amount'
     )

@@ -76,7 +76,8 @@ class CartViewSet(viewsets.ModelViewSet):
         recipe_id = int(self.kwargs['recipes_id'])
         recipe = get_object_or_404(Recipe, id=recipe_id)
         self.model.objects.create(
-            user=request.user, recipe=recipe
+            user=request.user,
+            recipe=recipe
         )
         serializer = ShoppingCartSerializer()
         return Response(

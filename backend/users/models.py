@@ -46,7 +46,7 @@ class User(AbstractUser):
         help_text='Отметьте для подписки на данного пользователя'
     )
     role = models.CharField(
-        'Пользовательская роль',
+        'пользовательская роль',
         max_length=15,
         choices=USER_ROLE,
         default=USER,
