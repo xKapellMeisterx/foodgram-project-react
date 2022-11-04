@@ -4,17 +4,26 @@ from users.models import User
 
 
 class Tag(models.Model):
+    HEX_CODE = (
+        ('Red', '#FF0000'),
+        ('Orange', '#FFA500'),
+        ('Yellow', '#FFFF00'),
+        ('Green', '#00FF00'),
+        ('Blue', '#0000FF'),
+        ('Dark blue', '#00008b'),
+        ('Purple', '#A020F0')
+    )
     name = models.CharField(
-        'название тега',
+        'название тэга',
         max_length=100,
         unique=True,
-        help_text='Введите название тега'
+        help_text='Введите название тэга'
     )
     hexcolor = models.CharField(
-        'цветовой HEX-код',
-        max_length=7,
-        unique=True,
-        help_text='Введите HEX-код тега'
+        'цвет тэга',
+        max_length=100,
+        choices=HEX_CODE,
+        help_text='Выберите цветовой HEX-код'
     )
     slug = models.SlugField(
         'слаг',
@@ -59,7 +68,7 @@ class Recipe(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='recipes',
-        verbose_name='Автор',
+        verbose_name='Автор рецепта',
         help_text='Выберите автора рецепта',
         null=True
     )
@@ -69,23 +78,23 @@ class Recipe(models.Model):
         help_text='Введите название рецепта'
     )
     text = models.TextField(
-        help_text='Введите описание рецепта'
+        'описание',
+        help_text='Введите текстовое описание рецепта'
     )
     image = models.ImageField(
-        'картинка',
+        'изображение',
         upload_to='recipes/',
-        blank=True,
         help_text='Выберите изображение'
     )
     tags = models.ManyToManyField(
-        'Tag',
+        Tag,
         verbose_name='Тэг',
         help_text='Выберите тэги'
     )
     ingredients = models.ManyToManyField(
-        'Ingredient',
+        Ingredient,
         verbose_name='Ингредиенты',
-        help_text='Выберите ингредиенты'
+        help_text='Выберите ингредиенты рецепта'
     )
     cooking_time = models.IntegerField(
         'время приготовления',

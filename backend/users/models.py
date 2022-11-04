@@ -3,59 +3,57 @@ from django.db import models
 
 
 class User(AbstractUser):
-    USER = 'user'
-    ADMIN = 'admin'
-
-    USER_ROLE = (
-        (USER, 'User'),
-        (ADMIN, 'Admin'),
+    ROLE_USERS = (
+        ('USER', 'user'),
+        ('ADMIN', 'admin')
     )
 
-    username = models.CharField(
-        max_length=150,
-        unique=True,
-        verbose_name='Уникальное имя',
-        help_text='Введите уникальное имя пользователя'
-    )
-    password = models.CharField(
-        max_length=150,
-        verbose_name='пароль',
-        help_text='Введите пароль пользователя'
-    )
     email = models.EmailField(
-        max_length=254,
+        'почта пользователя',
+        max_length=100,
+        help_text='Введите email пользователя'
+    )
+    username = models.CharField(
+        'логин пользователя',
+        max_length=100,
         unique=True,
-        verbose_name='Электронная почта',
-        help_text='Введите электронную почту пользователя'
+        help_text='Введите username пользователя'
     )
     first_name = models.CharField(
-        max_length=150,
-        blank=True,
-        verbose_name='Имя',
+        'имя пользователя',
+        max_length=100,
         help_text='Введите имя пользователя'
     )
     last_name = models.CharField(
-        max_length=150,
-        blank=True,
-        verbose_name='Фамилия',
+        'фамилия пользователя',
+        max_length=100,
         help_text='Введите фамилию пользователя'
     )
-    is_subscribed = models.BooleanField(
-        default=False,
-        verbose_name='Подписка на данного пользователя',
-        help_text='Отметьте для подписки на данного пользователя'
+    password = models.CharField(
+        'пароль пользователя',
+        max_length=100,
+        help_text='Введите пароль пользователя'
     )
     role = models.CharField(
-        'пользовательская роль',
-        max_length=15,
-        choices=USER_ROLE,
-        default=USER,
-        help_text='Выберите роль пользователя'
+        'роль пользователя',
+        max_length=10,
+        choices=ROLE_USERS,
+        default='USER',
+        help_text='Выберите роль для пользователя'
     )
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN or self.is_superuser
+        return self.role == 'ADMIN'
+
+    @property
+    def is_user(self):
+        return self.role == 'USER'
 
     def __str__(self):
         return self.username
@@ -63,14 +61,14 @@ class User(AbstractUser):
 
 class Follow(models.Model):
     user = models.ForeignKey(
-        'User',
+        User,
         on_delete=models.CASCADE,
         related_name='follower',
         verbose_name='Подписчик',
         help_text='Выберете пользователя, который подписывается'
     )
     following = models.ForeignKey(
-        'User',
+        User,
         on_delete=models.CASCADE,
         related_name='following',
         verbose_name='Автор',

@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag, \
-    IngredientMount
+from .models import (Favorite, Ingredient, IngredientMount, Recipe,
+                     ShoppingCart, Tag)
 
 
 @admin.register(Tag)
@@ -11,6 +11,7 @@ class TagsAdmin(admin.ModelAdmin):
         'hexcolor',
         'slug'
     )
+    prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Ingredient)
@@ -56,3 +57,5 @@ class IngredientMountAdmin(admin.ModelAdmin):
         'recipe',
         'amount'
     )
+
+
