@@ -63,5 +63,3 @@ class IngredientMountAdmin(admin.ModelAdmin):
         'recipe',
         'amount'
     )
-
-
