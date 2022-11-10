@@ -93,6 +93,7 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         Ingredient,
+        through='IngredientMount',
         verbose_name='Ингредиенты',
         help_text='Выберите ингредиенты рецепта'
     )
@@ -139,14 +140,17 @@ class ShoppingCart(models.Model):
             ),
         )
 
+    def __str__(self):
+        return f'Рецепт "{self.recipe}" в списке покупок {self.user}'
+
 
 class IngredientMount(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         related_name='recipe_ingredients',
-        verbose_name='Продукты рецепта',
-        help_text='Добавьте ингредиеты для рецепта'
+        verbose_name='Ингредиент',
+        help_text='Добавьте ингредиет для рецепта'
     )
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE,
@@ -156,7 +160,7 @@ class IngredientMount(models.Model):
     )
     amount = models.PositiveIntegerField(
         verbose_name='Количество ингредиента',
-        help_text='Введите количество продукта',
+        help_text='Введите количество ингредиента',
         validators=[MinValueValidator(1), ],
     )
 
@@ -166,7 +170,10 @@ class IngredientMount(models.Model):
         verbose_name_plural = 'Продукты в рецепте'
 
     def __str__(self):
-        return f'{self.ingredient} {self.recipe} {self.amount}'
+        return (
+            f'Колличество ингредиента {self.ingredient}'
+            f' в рецепте {self.recipe} = {self.amount}'
+        )
 
 
 class Favorite(models.Model):
@@ -196,4 +203,4 @@ class Favorite(models.Model):
         )
 
     def __str__(self):
-        return f'{self.user} take {self.recipe}'
+        return f'Пользователь {self.user} выбрал рецепт {self.recipe}'

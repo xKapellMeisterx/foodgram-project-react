@@ -31,28 +31,21 @@ class IngredientSerializer(serializers.ModelSerializer):
         )
 
 
-class IngredientAmountGetSerializer(serializers.ModelSerializer):
-    id = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField()
-    measurement_unit = serializers.SerializerMethodField()
+class IngredientMountSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
         model = IngredientMount
         fields = (
             'id',
-            "name",
-            "measurement_unit",
-            "amount"
+            'name',
+            'measurement_unit',
+            'amount'
         )
-
-    def get_id(self, obj):
-        return obj.ingredient.id
-
-    def get_name(self, obj):
-        return obj.ingredient.name
-
-    def get_measurement_unit(self, obj):
-        return obj.ingredient.measurement_unit
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
@@ -78,19 +71,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
-    author = CustomUserSerializer(read_only=True)
-    tags = TagSerializer(read_only=True, many=True)
-    ingredients = IngredientAmountGetSerializer(
-        read_only=True,
-        many=True,
-        source='recipe_ingredients'
-    )
-    is_favorited = serializers.SerializerMethodField(
-        method_name='get_is_favorited'
-    )
-    is_in_shopping_cart = serializers.SerializerMethodField(
-        method_name='get_is_in_shopping_cart'
-    )
+    tags = TagSerializer(many=True, read_only=True)
+    ingredients = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -105,26 +89,26 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             'image',
             'text',
             'cooking_time'
-        )
+            )
 
-    def get_user(self):
-        user = None
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            user = request.user
-        return user
+    def get_ingredients(self, obj):
+        ingredients = IngredientMount.objects.filter(recipe=obj)
+        return IngredientMountSerializer(ingredients, many=True).data
 
     def get_is_favorited(self, obj):
-        user = self.get_user()
-        if user and user.is_authenticated:
-            return obj.favourite.filter(user=user).exists()
-        return False
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return Favorite.objects.filter(user=request.user, recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.get_user()
-        if user and user.is_authenticated:
-            return obj.basket_recipes.filter(user=user).exists()
-        return False
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return ShoppingCart.objects.filter(
+            user=request.user,
+            recipe=obj
+        ).exists()
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
