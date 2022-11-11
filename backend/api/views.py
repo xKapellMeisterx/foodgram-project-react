@@ -3,6 +3,8 @@ from http import HTTPStatus
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
+
 from recipes.models import (Ingredient, IngredientMount, Recipe, ShoppingCart,
                             Tag, Favorite)
 from rest_framework import permissions, status, viewsets
@@ -14,43 +16,61 @@ from .serializers import (IngredientSerializer, RecipeGetSerializer,
                           TagSerializer, FavoriteSerializer)
 
 
-class TagsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+class TagsViewSet(viewsets.ViewSet):
+
+    def list(self, request):
+        queryset = Tag.objects.all()
+        serializer = TagSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = Tag.objects.all()
+        tag = get_object_or_404(queryset, pk=pk)
+        serializer = TagSerializer(tag)
+        return Response(serializer.data)
 
 
-class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
+class IngredientsViewSet(viewsets.ViewSet):
+
+    def list(self, request):
+        queryset = Ingredient.objects.all()
+        serializer = IngredientSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = Ingredient.objects.all()
+        ingredient = get_object_or_404(queryset, pk=pk)
+        serializer = IngredientSerializer(ingredient)
+        return Response(serializer.data)
 
 
-class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeGetSerializer
-    permission_classes = (IsAuthorOrReadOnly,)
-
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return RecipeGetSerializer
-        return RecipePostSerializer
+class RecipeViewSet(viewsets.ViewSet, CreateModelMixin, UpdateModelMixin):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def list(self, request):
+        queryset = Recipe.objects.all()
+        serializer = RecipeGetSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        serializer = RecipePostSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         serializer = RecipeGetSerializer(instance=serializer.instance)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED
-        )
+        return Response(serializer.data,status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, pk=None):
+        queryset = Recipe.objects.all()
+        ingredient = get_object_or_404(queryset, pk=pk)
+        serializer = RecipeGetSerializer(ingredient)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(
+        instance = Recipe.objects.get(pk=kwargs.get('pk'))
+        serializer = RecipePostSerializer(
             instance,
             data=request.data,
             partial=partial

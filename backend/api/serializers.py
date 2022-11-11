@@ -52,6 +52,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
     )
+    amount = serializers.IntegerField()
 
     class Meta:
         model = IngredientMount
@@ -133,17 +134,55 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
+    def validate(self, data):
+        ingredients = self.initial_data.get('ingredients')
+        if not ingredients:
+            raise serializers.ValidationError(
+                {'ingredients': 'В рецепте должен быть хотя бы один ингредиент'}
+            )
+        ingredients_list = []
+        for ingredient in ingredients:
+            if ingredient in ingredients_list:
+                raise serializers.ValidationError(
+                    {'ingredients': 'Ингредиент должен быть уникальным'}
+                )
+            ingredients_list.append(ingredient)
+            amount = ingredient['amount']
+            if amount <= 0:
+                raise serializers.ValidationError(
+                    {'amount': 'Колличество ингредиентов должно быть больше 0'}
+                )
+        tags = self.initial_data.get('tags')
+        if not tags:
+            raise serializers.ValidationError(
+                {'tags': 'Укажите хотя бы один тег в рецепте'}
+            )
+        tags_list = []
+        for tag in tags:
+            if tag in tags_list:
+                raise serializers.ValidationError(
+                    {'tags': 'Тэг должен быть уникальным'}
+                )
+            tags_list.append(tag)
+        cooking_time = self.initial_data.get('cooking_time')
+        if cooking_time <= 0:
+            raise serializers.ValidationError(
+                {'cooking_time': 'Время приготовления должно быть больше 0'}
+            )
+        return data
+
     def create(self, validated_data):
-        tags_set = validated_data.pop('tags')
+        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
-        for tag in tags_set:
+        for tag in tags:
             recipe.tags.add(tag)
-
         for ingredient in ingredients:
             IngredientMount.objects.create(
                 ingredient=ingredient['id'],
-                recipe=recipe, amount=ingredient['amount'])
+                recipe=recipe,
+                amount=ingredient['amount']
+            )
         return recipe
 
     def update(self, instance, validated_data):
@@ -151,45 +190,23 @@ class RecipePostSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get(
-            'cooking_time', instance.cooking_time
+            'cooking_time',
+            instance.cooking_time
         )
         instance.tags.clear()
-        tags_data = self.initial_data.get('tags')
-        instance.tags.set(tags_data)
+        tags = validated_data.get('tags')
+        for tag in tags:
+            instance.tags.add(tag)
         IngredientMount.objects.filter(recipe=instance).all().delete()
         ingredients = validated_data.get('ingredients')
         for ingredient in ingredients:
             IngredientMount.objects.create(
                 ingredient=ingredient['id'],
-                recipe=instance, amount=ingredient['amount'])
+                recipe=instance,
+                amount=ingredient['amount']
+            )
         instance.save()
         return instance
-
-    def validate(self, data):
-        ingredients = self.initial_data.get('ingredients')
-        if not ingredients:
-            raise serializers.ValidationError(
-                {'ingredients': 'Нужен хоть один ингридиент для рецепта'}
-            )
-        ingredient_list = []
-        for ingredient_item in ingredients:
-            ingredient = get_object_or_404(
-                Ingredient,
-                id=ingredient_item['id']
-            )
-            if ingredient in ingredient_list:
-                raise serializers.ValidationError(
-                    'Ингредиенты должны быть уникальными'
-                )
-            ingredient_list.append(ingredient)
-            if int(ingredient_item['amount']) < 1:
-                raise serializers.ValidationError({
-                    'ingredients': (
-                        'Убедитесь, что значение количества'
-                        ' ингредиента больше 1'
-                    )
-                })
-        return data
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
