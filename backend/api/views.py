@@ -136,32 +136,25 @@ class CartViewSet(viewsets.ModelViewSet):
         return response
 
 
-class FavoriteViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = FavoriteSerializer
-    queryset = Favorite.objects.all()
-    model = Favorite
+class FavoriteViewSet(viewsets.ViewSet):
 
-    def create(self, request, *args, **kwargs):
-        recipe_id = int(self.kwargs['recipes_id'])
-        recipe = get_object_or_404(Recipe, id=recipe_id)
-        self.model.objects.create(
-            user=request.user,
+    def create(self, request, recipes_id):
+        data = {'user': request.user.id, 'recipe': recipes_id}
+        serializer = FavoriteSerializer(
+            data=data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, recipes_id):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=recipes_id)
+        favorite = get_object_or_404(
+            Favorite,
+            user=user,
             recipe=recipe
         )
-        serializer = FavoriteSerializer()
-        return Response(
-            serializer.to_representation(instance=recipe),
-            status=status.HTTP_201_CREATED
-        )
-
-    def delete(self, request, *args, **kwargs):
-        recipe_id = self.kwargs['recipes_id']
-        user_id = request.user.id
-        object = get_object_or_404(
-            self.model,
-            user__id=user_id,
-            recipe__id=recipe_id
-        )
-        object.delete()
-        return Response(HTTPStatus.NO_CONTENT)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

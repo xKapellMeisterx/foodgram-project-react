@@ -231,23 +231,34 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         )
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-    cooking_time = serializers.IntegerField()
-    image = Base64ImageField(max_length=None, use_url=False,)
+class RecipeRepresentationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
 
+
+class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time'
+            'user',
+            'recipe'
         )
-        validators = (
-            UniqueTogetherValidator(
-                queryset=Favorite.objects.all(),
-                fields=('user', 'recipe')
-            )
-        )
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        recipe = data['recipe']
+        if Favorite.objects.filter(user=request.user, recipe=recipe).exists():
+            raise serializers.ValidationError({
+                'status': 'Рецепт уже есть в избранном!'
+            })
+        return data
+
+    def to_representation(self, instance):
+        print(instance)
+        request = self.context.get('request')
+        context = {'request': request}
+        return RecipeRepresentationSerializer(
+            instance.recipe, context=context).data
