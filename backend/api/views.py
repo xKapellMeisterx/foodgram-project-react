@@ -1,19 +1,15 @@
-from http import HTTPStatus
-
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from recipes.models import (Favorite, Ingredient, IngredientMount, Recipe,
+                            ShoppingCart, Tag)
+from rest_framework import status, viewsets
 from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
-
-from recipes.models import (Ingredient, IngredientMount, Recipe, ShoppingCart,
-                            Tag, Favorite)
-from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 
-from .permissions import IsAuthorOrReadOnly
-from .serializers import (IngredientSerializer, RecipeGetSerializer,
-                          RecipePostSerializer, ShoppingCartSerializer,
-                          TagSerializer, FavoriteSerializer)
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeGetSerializer, RecipePostSerializer,
+                          ShoppingCartSerializer, TagSerializer)
 
 
 class TagsViewSet(viewsets.ViewSet):
@@ -86,35 +82,51 @@ class RecipeViewSet(viewsets.ViewSet, CreateModelMixin, UpdateModelMixin):
         )
 
 
-class CartViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = ShoppingCartSerializer
-    queryset = ShoppingCart.objects.all()
-    model = ShoppingCart
+class FavoriteViewSet(viewsets.ViewSet):
 
-    def create(self, request, *args, **kwargs):
-        recipe_id = int(self.kwargs['recipes_id'])
-        recipe = get_object_or_404(Recipe, id=recipe_id)
-        self.model.objects.create(
-            user=request.user,
-            recipe=recipe
+    def create(self, request, recipes_id):
+        data = {'user': request.user.id, 'recipe': recipes_id}
+        serializer = FavoriteSerializer(
+            data=data,
+            context={'request': request}
         )
-        serializer = ShoppingCartSerializer()
-        return Response(
-            serializer.to_representation(instance=recipe),
-            status=status.HTTP_201_CREATED
-        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, *args, **kwargs):
+    def destroy(self, request, recipes_id):
         user = request.user
-        recipe_id = int(self.kwargs['recipes_id'])
-        recipe = get_object_or_404(Recipe, id=recipe_id)
-        shopping_cart = get_object_or_404(
-            self.model,
+        recipe = get_object_or_404(Recipe, id=recipes_id)
+        favorite = get_object_or_404(
+            Favorite,
             user=user,
             recipe=recipe
         )
-        shopping_cart.delete()
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ShoppingCartViewSet(viewsets.ViewSet):
+
+    def create(self, request, recipes_id):
+        data = {'user': request.user.id, 'recipe': recipes_id}
+        serializer = ShoppingCartSerializer(
+            data=data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, recipes_id):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=recipes_id)
+        favorite = get_object_or_404(
+            ShoppingCart,
+            user=user,
+            recipe=recipe
+        )
+        favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def download(self, request):
@@ -134,27 +146,3 @@ class CartViewSet(viewsets.ModelViewSet):
             f'attachment; filename={filename}'
         )
         return response
-
-
-class FavoriteViewSet(viewsets.ViewSet):
-
-    def create(self, request, recipes_id):
-        data = {'user': request.user.id, 'recipe': recipes_id}
-        serializer = FavoriteSerializer(
-            data=data,
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def delete(self, request, recipes_id):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=recipes_id)
-        favorite = get_object_or_404(
-            Favorite,
-            user=user,
-            recipe=recipe
-        )
-        favorite.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
