@@ -6,6 +6,22 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.models import Follow, User
 
 
+class CheckRequestMixin:
+
+    def good_request(self, request):
+        if not request or request.user.is_anonymous:
+            return False
+
+
+class GetIsFollowMixin:
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return request.user.follower.filter(following=obj).exists()
+
+
 class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
@@ -19,8 +35,10 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         )
 
 
-class CustomUserSerializer(UserSerializer):
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+class CustomUserSerializer(UserSerializer, GetIsFollowMixin):
+    is_subscribed = serializers.SerializerMethodField(
+        method_name='get_is_subscribed'
+    )
     pagination_class = LimitOffsetPagination
 
     class Meta:
@@ -34,12 +52,6 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed'
         )
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return Follow.objects.filter(user=request.user, following=obj).exists()
-
 
 class FollowRecipesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,7 +64,7 @@ class FollowRecipesSerializer(serializers.ModelSerializer):
         )
 
 
-class FollowSerializer(serializers.ModelSerializer):
+class FollowSerializer(serializers.ModelSerializer, CheckRequestMixin):
     class Meta:
         model = Follow
         fields = (
@@ -69,8 +81,7 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
+        self.good_request(request)
         following = data['following']
         if request.user == following:
             raise serializers.ValidationError(
@@ -82,11 +93,16 @@ class FollowSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         context = {'request': request}
         return FollowListSerializer(
-            instance.following, context=context).data
+            instance.following, context=context
+        ).data
 
 
-class FollowListSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+class FollowListSerializer(
+    serializers.ModelSerializer, GetIsFollowMixin, CheckRequestMixin
+):
+    is_subscribed = serializers.SerializerMethodField(
+        method_name='get_is_subscribed'
+    )
     recipes = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.SerializerMethodField(read_only=True)
 
@@ -103,16 +119,9 @@ class FollowListSerializer(serializers.ModelSerializer):
             'recipes_count'
         )
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return Follow.objects.filter(user=request.user, following=obj).exists()
-
     def get_recipes(self, obj):
         request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
+        self.good_request(request)
         context = {'request': request}
         recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit is not None:
@@ -120,7 +129,8 @@ class FollowListSerializer(serializers.ModelSerializer):
         else:
             recipes = obj.recipes.all()
         return FollowRecipesSerializer(
-            recipes, many=True, context=context).data
+            recipes, many=True, context=context
+        ).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()

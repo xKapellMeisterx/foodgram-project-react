@@ -180,6 +180,7 @@ class Favorite(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='chooser',
         verbose_name='Пользователь',
         help_text='Выберите пользователя'
     )

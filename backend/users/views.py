@@ -39,5 +39,3 @@ class FollowListApiView(ListAPIView):
             context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
-
-
