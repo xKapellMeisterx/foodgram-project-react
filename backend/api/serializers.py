@@ -207,11 +207,23 @@ class RecipePostSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return RecipeGetSerializer(
+            instance, context=context
+        ).data
+
 
 class RecipeRepresentationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer, CheckRequestMixin):
@@ -236,7 +248,8 @@ class ShoppingCartSerializer(serializers.ModelSerializer, CheckRequestMixin):
         request = self.context.get('request')
         context = {'request': request}
         return RecipeRepresentationSerializer(
-            instance.recipe, context=context).data
+            instance.recipe, context=context
+        ).data
 
 
 class FavoriteSerializer(serializers.ModelSerializer, CheckRequestMixin):
@@ -261,4 +274,5 @@ class FavoriteSerializer(serializers.ModelSerializer, CheckRequestMixin):
         request = self.context.get('request')
         context = {'request': request}
         return RecipeRepresentationSerializer(
-            instance.recipe, context=context).data
+            instance.recipe, context=context
+        ).data
