@@ -47,20 +47,20 @@ class RecipeViewSet(viewsets.ViewSet, CreateModelMixin, UpdateModelMixin):
 
     def list(self, request):
         queryset = Recipe.objects.all()
-        serializer = RecipeGetSerializer(queryset, many=True)
+        serializer = RecipeGetSerializer(queryset, context={'request': request}, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
         serializer = RecipePostSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        serializer = RecipeGetSerializer(instance=serializer.instance)
+        serializer = RecipeGetSerializer(instance=serializer.instance, context={'request': request})
         return Response(serializer.data,status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
         queryset = Recipe.objects.all()
         ingredient = get_object_or_404(queryset, pk=pk)
-        serializer = RecipeGetSerializer(ingredient)
+        serializer = RecipeGetSerializer(ingredient, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
@@ -69,11 +69,12 @@ class RecipeViewSet(viewsets.ViewSet, CreateModelMixin, UpdateModelMixin):
         serializer = RecipePostSerializer(
             instance,
             data=request.data,
-            partial=partial
+            partial=partial,
+            context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        serializer = RecipeGetSerializer(instance=serializer.instance)
+        serializer = RecipeGetSerializer(instance=serializer.instance, context={'request': request})
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data,
