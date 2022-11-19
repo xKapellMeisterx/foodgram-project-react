@@ -3,6 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
+    """Модель пользователя."""
     ROLE_USERS = (
         ('USER', 'user'),
         ('ADMIN', 'admin')
@@ -60,6 +61,11 @@ class User(AbstractUser):
 
 
 class Follow(models.Model):
+    """
+    Подписка на авторов.
+    Пользователь (user) связан с моделю User.
+    Автор рецепта (following) связан с моделю User.
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

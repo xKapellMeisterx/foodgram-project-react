@@ -3,10 +3,11 @@ from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Ingredient, IngredientMount, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import serializers
-from users.serializers import CustomUserSerializer, CheckRequestMixin
+from users.serializers import CheckRequestMixin, CustomUserSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с моделью Tag."""
     class Meta:
         model = Tag
         fields = (
@@ -18,6 +19,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с моделью Ingredient."""
     class Meta:
         model = Ingredient
         fields = (
@@ -28,6 +30,10 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class IngredientMountSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для работы с моделью IngredientMount при GET
+    запросах к моделе Recipe.
+    """
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -45,6 +51,10 @@ class IngredientMountSerializer(serializers.ModelSerializer):
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для работы с моделью IngredientMount при POST, PATCH, DEL
+    запросах к моделе Recipe.
+    """
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
     )
@@ -58,16 +68,8 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         )
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Favorite
-        fields = (
-            'user',
-            'recipe'
-        )
-
-
 class RecipeGetSerializer(serializers.ModelSerializer, CheckRequestMixin):
+    """Сериализатор для работы с моделью Recipe при GET запросах."""
     tags = TagSerializer(many=True, read_only=True)
     author = CustomUserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
@@ -108,6 +110,9 @@ class RecipeGetSerializer(serializers.ModelSerializer, CheckRequestMixin):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для работы с моделью Recipe при POST, PATCH, DEL запросах.
+    """
     author = CustomUserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
@@ -216,6 +221,10 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
 
 class RecipeRepresentationSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для работы с моделью Recipe для представления response данных
+    при POST запросах к моделям ShoppingCart, Favorite.
+    """
     class Meta:
         model = Recipe
         fields = (
@@ -227,6 +236,9 @@ class RecipeRepresentationSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer, CheckRequestMixin):
+    """
+    Сериализатор для работы с моделью ShoppingCart.
+    """
     class Meta:
         model = ShoppingCart
         fields = (
@@ -253,6 +265,9 @@ class ShoppingCartSerializer(serializers.ModelSerializer, CheckRequestMixin):
 
 
 class FavoriteSerializer(serializers.ModelSerializer, CheckRequestMixin):
+    """
+    Сериализатор для работы с моделью Favorite.
+    """
     class Meta:
         model = Favorite
         fields = (

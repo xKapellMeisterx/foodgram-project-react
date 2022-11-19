@@ -8,6 +8,12 @@ from users.serializers import FollowListSerializer, FollowSerializer
 
 
 class FollowApiView(APIView):
+    """
+    Работа с данными модели Follow.
+    Формирует представление данных при POST, DEL запросах
+    к endpoint:
+    /api/users/{id}/subscribe/
+    """
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, id):
@@ -28,6 +34,12 @@ class FollowApiView(APIView):
 
 
 class FollowListApiView(ListAPIView):
+    """
+    Работа с данными модели Follow.
+    Формирует представление данных при GET запросах
+    к endpoint:
+    /api/users/subscriptions/
+    """
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
