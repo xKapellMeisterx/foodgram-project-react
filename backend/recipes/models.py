@@ -8,6 +8,7 @@ class Tag(models.Model):
     Тэги для рецептов.
     Связаны с моделю Recipe через М2М.
     """
+
     HEX_CODE = (
         ('Red', '#FF0000'),
         ('Orange', '#FFA500'),
@@ -50,6 +51,7 @@ class Ingredient(models.Model):
     Ингридиенты для рецепта.
     Связаны с моделю Recipe через М2М. Связующая модель - IngredientMount.
     """
+
     name = models.CharField(
         'название ингредиента',
         max_length=100,
@@ -79,6 +81,7 @@ class Recipe(models.Model):
     Ингредиенты (ingredients) связаны с моделью Ingredient через M2M.
     Связующая модель - IngredientMount.
     """
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -133,6 +136,7 @@ class ShoppingCart(models.Model):
     Пользователь (user) связан с моделю User.
     Рецепт (recipe) связан с моделю Recipe.
     """
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -169,6 +173,7 @@ class IngredientMount(models.Model):
     Количество ингридиента в рецерте.
     Является связующей моделью для моделей Ingredient и Recipe.
     """
+
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
@@ -206,6 +211,7 @@ class Favorite(models.Model):
     Пользователь (user) связан с моделю User.
     Рецепт (recipe) связан с моделю Recipe.
     """
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

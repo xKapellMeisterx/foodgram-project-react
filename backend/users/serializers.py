@@ -8,6 +8,7 @@ from users.models import Follow, User
 
 class CheckRequestMixin:
     """Миксин для проверки запроса."""
+
     def good_request(self, request):
         if not request or request.user.is_anonymous:
             return False
@@ -18,6 +19,7 @@ class GetIsFollowMixin:
     Миксин проверяет запрос. После этого проверяет подписал ли пользователь
     на автора.
     """
+
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if not request or request.user.is_anonymous:
@@ -26,9 +28,8 @@ class GetIsFollowMixin:
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
-    """
-    Сериализатор для работы с моделью User.
-    """
+    """Сериализатор для работы с моделью User."""
+
     class Meta:
         model = User
         fields = (
@@ -42,9 +43,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(UserSerializer, GetIsFollowMixin):
-    """
-    Сериализатор для работы с моделью User включая вывод подписок.
-    """
+    """Сериализатор для работы с моделью User включая вывод подписок."""
+
     is_subscribed = serializers.SerializerMethodField(
         method_name='get_is_subscribed'
     )
@@ -67,6 +67,7 @@ class FollowRecipesSerializer(serializers.ModelSerializer):
     Сериализатор для представления данных о рецептах,
     которые созданы пользователем.
     """
+
     class Meta:
         model = Recipe
         fields = (
@@ -78,9 +79,8 @@ class FollowRecipesSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer, CheckRequestMixin):
-    """
-    Сериализатор работы с моделью Follow.
-    """
+    """Сериализатор работы с моделью Follow."""
+
     class Meta:
         model = Follow
         fields = (
@@ -116,9 +116,8 @@ class FollowSerializer(serializers.ModelSerializer, CheckRequestMixin):
 class FollowListSerializer(
     serializers.ModelSerializer, GetIsFollowMixin, CheckRequestMixin
 ):
-    """
-    Сериализатор для получения списка подписок.
-    """
+    """Сериализатор для получения списка подписок."""
+
     is_subscribed = serializers.SerializerMethodField(
         method_name='get_is_subscribed'
     )

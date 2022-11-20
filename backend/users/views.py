@@ -14,6 +14,7 @@ class FollowApiView(APIView):
     к endpoint:
     /api/users/{id}/subscribe/
     """
+
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, id):
@@ -40,6 +41,7 @@ class FollowListApiView(ListAPIView):
     к endpoint:
     /api/users/subscriptions/
     """
+
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):

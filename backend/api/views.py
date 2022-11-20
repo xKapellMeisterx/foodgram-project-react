@@ -14,6 +14,42 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           ShoppingCartSerializer, TagSerializer)
 
 
+class RecipePostDeleteMixin:
+    """
+    Миксин для создания и удаления рецептов в favorite или в shopping_cart.
+    """
+
+    def create_mix(self, request, pk, model):
+        data = {'user': request.user.id, 'recipe': pk}
+        if model == 'favorite':
+            serializer = FavoriteSerializer(
+                data=data,
+                context={'request': request}
+            )
+        if model == 'shopping_cart':
+            serializer = ShoppingCartSerializer(
+                data=data,
+                context={'request': request}
+            )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return serializer
+
+    def delete_mix(self, request, pk, model):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+        if model == 'favorite':
+            obj = get_object_or_404(
+                Favorite, user=user, recipe=recipe
+            )
+        if model == 'shopping_cart':
+            obj = get_object_or_404(
+                ShoppingCart, user=user, recipe=recipe
+            )
+        obj.delete()
+        return status.HTTP_204_NO_CONTENT
+
+
 class TagsModelViewSet(viewsets.ModelViewSet):
     """
     Работа с данными модели Tags.
@@ -21,6 +57,7 @@ class TagsModelViewSet(viewsets.ModelViewSet):
     /api/tags/
     /api/tags/{id}/
     """
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     http_method_names = ('get', )
@@ -33,12 +70,13 @@ class IngredientsModelViewSet(viewsets.ModelViewSet):
     /api/ingredients/
     /api/ingredients/{id}/
     """
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     http_method_names = ('get',)
 
 
-class RecipeModelViewSet(viewsets.ModelViewSet):
+class RecipeModelViewSet(viewsets.ModelViewSet, RecipePostDeleteMixin):
     """
     Работа с данными модели Recipe.
     Формирует представление данных при GET, POST, PATH, DEL запросах
@@ -46,6 +84,7 @@ class RecipeModelViewSet(viewsets.ModelViewSet):
     /api/recipes/
     /api/recipes/{id}/
     """
+
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrReadOnly]
 
@@ -70,21 +109,11 @@ class RecipeModelViewSet(viewsets.ModelViewSet):
         /api/recipes/{id}/favorite/
         """
         if request.method == 'POST':
-            data = {'user': request.user.id, 'recipe': pk}
-            serializer = FavoriteSerializer(
-                data=data, context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer = self.create_mix(request, pk, model='favorite')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            user = request.user
-            recipe = get_object_or_404(Recipe, id=pk)
-            favorite = get_object_or_404(
-                Favorite, user=user, recipe=recipe
-            )
-            favorite.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            obj_status_delete = self.delete_mix(request, pk, model='favorite')
+            return Response(status=obj_status_delete)
 
     @action(
         methods=['post', 'delete'],
@@ -98,25 +127,15 @@ class RecipeModelViewSet(viewsets.ModelViewSet):
         к endpoint:
         /api/recipes/{id}/shopping_cart/
         """
+
         if request.method == 'POST':
-            data = {'user': request.user.id, 'recipe': pk}
-            serializer = ShoppingCartSerializer(
-                data=data,
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer = self.create_mix(request, pk, model='shopping_cart')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            user = request.user
-            recipe = get_object_or_404(Recipe, id=pk)
-            favorite = get_object_or_404(
-                ShoppingCart,
-                user=user,
-                recipe=recipe
+            obj_status_delete = self.delete_mix(
+                request, pk, model='shopping_cart'
             )
-            favorite.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=obj_status_delete)
 
     @action(
         methods=['get'],
@@ -129,6 +148,7 @@ class RecipeModelViewSet(viewsets.ModelViewSet):
         рецептов в формате TXT при GET запросе к endpoint:
         /api/recipes/download_shopping_cart/
         """
+
         shopping_list = IngredientMount.objects.filter(
             recipe__shopping_cart__user=request.user
         ).values(
