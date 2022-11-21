@@ -1,9 +1,10 @@
 from django.core.validators import MinValueValidator
 from drf_extra_fields.fields import Base64ImageField
+
 from recipes.models import (Favorite, Ingredient, IngredientMount, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import serializers
-from users.serializers import CheckRequestMixin, CustomUserSerializer
+from users.serializers import CustomUserSerializer, CheckRequestMixin
 
 
 class TagSerializer(serializers.ModelSerializer):

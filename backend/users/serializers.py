@@ -3,28 +3,30 @@ from recipes.models import Recipe
 from rest_framework import serializers
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.validators import UniqueTogetherValidator
+
+from users.mixins import GetIsFollowMixin, CheckRequestMixin
 from users.models import Follow, User
 
 
-class CheckRequestMixin:
-    """Миксин для проверки запроса."""
-
-    def good_request(self, request):
-        if not request or request.user.is_anonymous:
-            return False
-
-
-class GetIsFollowMixin:
-    """
-    Миксин проверяет запрос. После этого проверяет подписал ли пользователь
-    на автора.
-    """
-
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return request.user.follower.filter(following=obj).exists()
+# class CheckRequestMixin:
+#     """Миксин для проверки запроса."""
+#
+#     def good_request(self, request):
+#         if not request or request.user.is_anonymous:
+#             return False
+#
+#
+# class GetIsFollowMixin:
+#     """
+#     Миксин проверяет запрос. После этого проверяет подписал ли пользователь
+#     на автора.
+#     """
+#
+#     def get_is_subscribed(self, obj):
+#         request = self.context.get('request')
+#         if not request or request.user.is_anonymous:
+#             return False
+#         return request.user.follower.filter(following=obj).exists()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -142,10 +144,8 @@ class FollowListSerializer(
         self.good_request(request)
         context = {'request': request}
         recipes_limit = request.query_params.get('recipes_limit')
-        if recipes_limit is not None:
-            recipes = obj.recipes.all()[:int(recipes_limit)]
-        else:
-            recipes = obj.recipes.all()
+        recipes = (obj.recipes.all()[:int(recipes_limit)]
+                   if recipes_limit else obj.recipes.all())
         return FollowRecipesSerializer(
             recipes, many=True, context=context
         ).data
