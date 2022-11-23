@@ -145,7 +145,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         tags = self.initial_data.get('tags')
         self.validate_unic(ingredients, tags)
         cooking_time = self.initial_data.get('cooking_time')
-        if cooking_time <= 0:
+        if int(cooking_time) <= 0:
             raise serializers.ValidationError(
                 {'cooking_time': 'Время приготовления должно быть больше 0'}
             )
