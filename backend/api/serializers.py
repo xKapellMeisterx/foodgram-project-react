@@ -15,7 +15,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
-            'hexcolor',
+            'color',
             'slug'
         )
 
@@ -164,10 +164,11 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return ingredients
 
     def validate_tags(self, tags):
-        if not tags:
+        if len(tags) <= 0:
             raise serializers.ValidationError(
                 {'tags': 'Укажите хотя бы один тег в рецепте'}
             )
+        return tags
 
     def validate_unic(self, ingredients, tags):
         ingredients_list = []

@@ -8,7 +8,7 @@ from .models import (Favorite, Ingredient, IngredientMount, Recipe,
 class TagsAdmin(admin.ModelAdmin):
     list_display = (
         'name',
-        'hexcolor',
+        'color',
         'slug'
     )
     prepopulated_fields = {'slug': ('name',)}

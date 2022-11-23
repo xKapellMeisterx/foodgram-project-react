@@ -1,11 +1,13 @@
 from django.db.models import F, Sum
 from django.http import HttpResponse
+
 from recipes.models import Ingredient, IngredientMount, Recipe, Tag
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from .mixins import RecipePostDeleteMixin
+from .pagination import NewPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeGetSerializer,
                           RecipePostSerializer, TagSerializer)
@@ -48,6 +50,7 @@ class RecipeModelViewSet(viewsets.ModelViewSet, RecipePostDeleteMixin):
 
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrReadOnly]
+    pagination_class = NewPageNumberPagination
 
     def get_serializer_class(self):
         if self.action == 'get':
