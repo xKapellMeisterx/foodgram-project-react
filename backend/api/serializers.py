@@ -100,7 +100,7 @@ class RecipeGetSerializer(serializers.ModelSerializer, CheckRequestMixin):
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         self.good_request(request)
-        return request.user.chooser.filter(recipe=obj).exists()
+        return request.user.favorites.filter(recipe=obj).exists()
 
     def get_ingredients(self, obj):
         ingredients = IngredientMount.objects.filter(recipe=obj)
@@ -295,7 +295,7 @@ class FavoriteSerializer(serializers.ModelSerializer, CheckRequestMixin):
         request = self.context.get('request')
         self.good_request(request)
         recipe = data['recipe']
-        if request.user.chooser.filter(recipe=recipe).exists():
+        if request.user.favorites.filter(recipe=recipe).exists():
             raise serializers.ValidationError({
                 'status': 'Рецепт уже есть в избранном'
             })
