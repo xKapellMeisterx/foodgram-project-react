@@ -1,10 +1,9 @@
 from django.core.validators import MinValueValidator
 from drf_extra_fields.fields import Base64ImageField
-
 from recipes.models import (Favorite, Ingredient, IngredientMount, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import serializers
-from users.serializers import CustomUserSerializer, CheckRequestMixin
+from users.serializers import CheckRequestMixin, CustomUserSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -95,7 +94,7 @@ class RecipeGetSerializer(serializers.ModelSerializer, CheckRequestMixin):
             'image',
             'text',
             'cooking_time'
-            )
+        )
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')

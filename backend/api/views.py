@@ -1,13 +1,12 @@
 from django.db.models import F, Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-
 from recipes.models import Ingredient, IngredientMount, Recipe, Tag
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
-from .filters import RecipeFilter, IngredientSearchFilter
+from .filters import IngredientSearchFilter, RecipeFilter
 from .mixins import RecipePostDeleteMixin
 from .pagination import NewPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
@@ -83,7 +82,6 @@ class RecipeModelViewSet(viewsets.ModelViewSet, RecipePostDeleteMixin):
 
         return self.create_or_delete(request, pk, model='favorite')
 
-
     @action(
         methods=['post', 'delete'],
         detail=True,
@@ -98,7 +96,6 @@ class RecipeModelViewSet(viewsets.ModelViewSet, RecipePostDeleteMixin):
         """
 
         return self.create_or_delete(request, pk, model='shopping_cart')
-
 
     @action(
         methods=['get'],
