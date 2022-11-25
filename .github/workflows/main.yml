@@ -53,11 +53,21 @@ jobs:
       - name: Push to Docker Hub
         # Пуш образа в Docker Hub
         uses: docker/build-push-action@v2
+#        with:
+#          no-cache: true
+#          push: true
+#          context: ./backend
+#          tags: xkapellmeisterx/foodgram:latest
         with:
-          no-cache: true
+          context: backend/
           push: true
-          context: ./backend
-          tags: xkapellmeisterx/foodgram:latest
+          tags: xkapellmeisterx/foodgram_backend:latest
+      - name: Push frontend
+        uses: docker/build-push-action@v2
+        with:
+          context: frontend/
+          push: true
+          tags: xkapellmeisterx/foodgram_frontend:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -71,7 +81,12 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }} # Если ваш ssh-ключ защищён фразой-паролем
           script: |
-            sudo docker pull xkapellmeisterx/foodgram
+#            sudo docker pull xkapellmeisterx/foodgram
+#            sudo docker-compose stop
+#            sudo docker-compose rm backend
+            sudo docker pull themasterid/foodgram_backend:latest
+            sudo docker pull themasterid/foodgram_frontend:latest
+            cd infra/
             sudo docker-compose stop
             sudo docker-compose rm backend
             echo > .env
@@ -81,7 +96,7 @@ jobs:
             echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
             echo DB_HOST=${{ secrets.DB_HOST }} >> .env
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-            sudo docker-compose up -d
+            sudo docker-compose up -d --build
 
   send_message:
     runs-on: ubuntu-latest

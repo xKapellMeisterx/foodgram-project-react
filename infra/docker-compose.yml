@@ -8,7 +8,7 @@ services:
     env_file:
       - ./.env
   backend:
-    image: xkapellmeisterx/foodgram:latest
+    image: xkapellmeisterx/foodgram_backend:latest
 #    build:
 #      context: ../backend
 #      dockerfile: Dockerfile
