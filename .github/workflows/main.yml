@@ -83,7 +83,9 @@ jobs:
           script: |
             sudo docker pull xkapellmeisterx/foodgram_backend:latest
             sudo docker pull xkapellmeisterx/foodgram_frontend:latest
+            ls
             cd infra/
+            ls
             sudo docker-compose stop
             sudo docker-compose rm backend
             echo > .env
