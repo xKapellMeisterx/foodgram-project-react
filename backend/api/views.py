@@ -111,13 +111,15 @@ class RecipeModelViewSet(viewsets.ModelViewSet, RecipePostDeleteMixin):
 
         shopping_list = IngredientMount.objects.filter(
             recipe__shopping_cart__user=request.user
-        ).values(
-            name=F('ingredient__name'),
-            measurement_unit=F('ingredient__measurement_unit')
-        ).annotate(ingredient_total=Sum('amount'))
+        ).values_list(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).order_by(
+            'ingredient__name'
+        ).annotate(
+            ingredient_total=Sum('amount')
+        )
         content = (
-            [f'{item["name"]} ({item["measurement_unit"]}) - '
-             f'{item["ingredient_total"]}\n' for item in shopping_list]
+            [f'{item[0]} ({item[1]}) - {item[2]}\n' for item in shopping_list]
         )
         filename = 'shopping_cart.txt'
         response = HttpResponse(content, content_type='text/plain')
